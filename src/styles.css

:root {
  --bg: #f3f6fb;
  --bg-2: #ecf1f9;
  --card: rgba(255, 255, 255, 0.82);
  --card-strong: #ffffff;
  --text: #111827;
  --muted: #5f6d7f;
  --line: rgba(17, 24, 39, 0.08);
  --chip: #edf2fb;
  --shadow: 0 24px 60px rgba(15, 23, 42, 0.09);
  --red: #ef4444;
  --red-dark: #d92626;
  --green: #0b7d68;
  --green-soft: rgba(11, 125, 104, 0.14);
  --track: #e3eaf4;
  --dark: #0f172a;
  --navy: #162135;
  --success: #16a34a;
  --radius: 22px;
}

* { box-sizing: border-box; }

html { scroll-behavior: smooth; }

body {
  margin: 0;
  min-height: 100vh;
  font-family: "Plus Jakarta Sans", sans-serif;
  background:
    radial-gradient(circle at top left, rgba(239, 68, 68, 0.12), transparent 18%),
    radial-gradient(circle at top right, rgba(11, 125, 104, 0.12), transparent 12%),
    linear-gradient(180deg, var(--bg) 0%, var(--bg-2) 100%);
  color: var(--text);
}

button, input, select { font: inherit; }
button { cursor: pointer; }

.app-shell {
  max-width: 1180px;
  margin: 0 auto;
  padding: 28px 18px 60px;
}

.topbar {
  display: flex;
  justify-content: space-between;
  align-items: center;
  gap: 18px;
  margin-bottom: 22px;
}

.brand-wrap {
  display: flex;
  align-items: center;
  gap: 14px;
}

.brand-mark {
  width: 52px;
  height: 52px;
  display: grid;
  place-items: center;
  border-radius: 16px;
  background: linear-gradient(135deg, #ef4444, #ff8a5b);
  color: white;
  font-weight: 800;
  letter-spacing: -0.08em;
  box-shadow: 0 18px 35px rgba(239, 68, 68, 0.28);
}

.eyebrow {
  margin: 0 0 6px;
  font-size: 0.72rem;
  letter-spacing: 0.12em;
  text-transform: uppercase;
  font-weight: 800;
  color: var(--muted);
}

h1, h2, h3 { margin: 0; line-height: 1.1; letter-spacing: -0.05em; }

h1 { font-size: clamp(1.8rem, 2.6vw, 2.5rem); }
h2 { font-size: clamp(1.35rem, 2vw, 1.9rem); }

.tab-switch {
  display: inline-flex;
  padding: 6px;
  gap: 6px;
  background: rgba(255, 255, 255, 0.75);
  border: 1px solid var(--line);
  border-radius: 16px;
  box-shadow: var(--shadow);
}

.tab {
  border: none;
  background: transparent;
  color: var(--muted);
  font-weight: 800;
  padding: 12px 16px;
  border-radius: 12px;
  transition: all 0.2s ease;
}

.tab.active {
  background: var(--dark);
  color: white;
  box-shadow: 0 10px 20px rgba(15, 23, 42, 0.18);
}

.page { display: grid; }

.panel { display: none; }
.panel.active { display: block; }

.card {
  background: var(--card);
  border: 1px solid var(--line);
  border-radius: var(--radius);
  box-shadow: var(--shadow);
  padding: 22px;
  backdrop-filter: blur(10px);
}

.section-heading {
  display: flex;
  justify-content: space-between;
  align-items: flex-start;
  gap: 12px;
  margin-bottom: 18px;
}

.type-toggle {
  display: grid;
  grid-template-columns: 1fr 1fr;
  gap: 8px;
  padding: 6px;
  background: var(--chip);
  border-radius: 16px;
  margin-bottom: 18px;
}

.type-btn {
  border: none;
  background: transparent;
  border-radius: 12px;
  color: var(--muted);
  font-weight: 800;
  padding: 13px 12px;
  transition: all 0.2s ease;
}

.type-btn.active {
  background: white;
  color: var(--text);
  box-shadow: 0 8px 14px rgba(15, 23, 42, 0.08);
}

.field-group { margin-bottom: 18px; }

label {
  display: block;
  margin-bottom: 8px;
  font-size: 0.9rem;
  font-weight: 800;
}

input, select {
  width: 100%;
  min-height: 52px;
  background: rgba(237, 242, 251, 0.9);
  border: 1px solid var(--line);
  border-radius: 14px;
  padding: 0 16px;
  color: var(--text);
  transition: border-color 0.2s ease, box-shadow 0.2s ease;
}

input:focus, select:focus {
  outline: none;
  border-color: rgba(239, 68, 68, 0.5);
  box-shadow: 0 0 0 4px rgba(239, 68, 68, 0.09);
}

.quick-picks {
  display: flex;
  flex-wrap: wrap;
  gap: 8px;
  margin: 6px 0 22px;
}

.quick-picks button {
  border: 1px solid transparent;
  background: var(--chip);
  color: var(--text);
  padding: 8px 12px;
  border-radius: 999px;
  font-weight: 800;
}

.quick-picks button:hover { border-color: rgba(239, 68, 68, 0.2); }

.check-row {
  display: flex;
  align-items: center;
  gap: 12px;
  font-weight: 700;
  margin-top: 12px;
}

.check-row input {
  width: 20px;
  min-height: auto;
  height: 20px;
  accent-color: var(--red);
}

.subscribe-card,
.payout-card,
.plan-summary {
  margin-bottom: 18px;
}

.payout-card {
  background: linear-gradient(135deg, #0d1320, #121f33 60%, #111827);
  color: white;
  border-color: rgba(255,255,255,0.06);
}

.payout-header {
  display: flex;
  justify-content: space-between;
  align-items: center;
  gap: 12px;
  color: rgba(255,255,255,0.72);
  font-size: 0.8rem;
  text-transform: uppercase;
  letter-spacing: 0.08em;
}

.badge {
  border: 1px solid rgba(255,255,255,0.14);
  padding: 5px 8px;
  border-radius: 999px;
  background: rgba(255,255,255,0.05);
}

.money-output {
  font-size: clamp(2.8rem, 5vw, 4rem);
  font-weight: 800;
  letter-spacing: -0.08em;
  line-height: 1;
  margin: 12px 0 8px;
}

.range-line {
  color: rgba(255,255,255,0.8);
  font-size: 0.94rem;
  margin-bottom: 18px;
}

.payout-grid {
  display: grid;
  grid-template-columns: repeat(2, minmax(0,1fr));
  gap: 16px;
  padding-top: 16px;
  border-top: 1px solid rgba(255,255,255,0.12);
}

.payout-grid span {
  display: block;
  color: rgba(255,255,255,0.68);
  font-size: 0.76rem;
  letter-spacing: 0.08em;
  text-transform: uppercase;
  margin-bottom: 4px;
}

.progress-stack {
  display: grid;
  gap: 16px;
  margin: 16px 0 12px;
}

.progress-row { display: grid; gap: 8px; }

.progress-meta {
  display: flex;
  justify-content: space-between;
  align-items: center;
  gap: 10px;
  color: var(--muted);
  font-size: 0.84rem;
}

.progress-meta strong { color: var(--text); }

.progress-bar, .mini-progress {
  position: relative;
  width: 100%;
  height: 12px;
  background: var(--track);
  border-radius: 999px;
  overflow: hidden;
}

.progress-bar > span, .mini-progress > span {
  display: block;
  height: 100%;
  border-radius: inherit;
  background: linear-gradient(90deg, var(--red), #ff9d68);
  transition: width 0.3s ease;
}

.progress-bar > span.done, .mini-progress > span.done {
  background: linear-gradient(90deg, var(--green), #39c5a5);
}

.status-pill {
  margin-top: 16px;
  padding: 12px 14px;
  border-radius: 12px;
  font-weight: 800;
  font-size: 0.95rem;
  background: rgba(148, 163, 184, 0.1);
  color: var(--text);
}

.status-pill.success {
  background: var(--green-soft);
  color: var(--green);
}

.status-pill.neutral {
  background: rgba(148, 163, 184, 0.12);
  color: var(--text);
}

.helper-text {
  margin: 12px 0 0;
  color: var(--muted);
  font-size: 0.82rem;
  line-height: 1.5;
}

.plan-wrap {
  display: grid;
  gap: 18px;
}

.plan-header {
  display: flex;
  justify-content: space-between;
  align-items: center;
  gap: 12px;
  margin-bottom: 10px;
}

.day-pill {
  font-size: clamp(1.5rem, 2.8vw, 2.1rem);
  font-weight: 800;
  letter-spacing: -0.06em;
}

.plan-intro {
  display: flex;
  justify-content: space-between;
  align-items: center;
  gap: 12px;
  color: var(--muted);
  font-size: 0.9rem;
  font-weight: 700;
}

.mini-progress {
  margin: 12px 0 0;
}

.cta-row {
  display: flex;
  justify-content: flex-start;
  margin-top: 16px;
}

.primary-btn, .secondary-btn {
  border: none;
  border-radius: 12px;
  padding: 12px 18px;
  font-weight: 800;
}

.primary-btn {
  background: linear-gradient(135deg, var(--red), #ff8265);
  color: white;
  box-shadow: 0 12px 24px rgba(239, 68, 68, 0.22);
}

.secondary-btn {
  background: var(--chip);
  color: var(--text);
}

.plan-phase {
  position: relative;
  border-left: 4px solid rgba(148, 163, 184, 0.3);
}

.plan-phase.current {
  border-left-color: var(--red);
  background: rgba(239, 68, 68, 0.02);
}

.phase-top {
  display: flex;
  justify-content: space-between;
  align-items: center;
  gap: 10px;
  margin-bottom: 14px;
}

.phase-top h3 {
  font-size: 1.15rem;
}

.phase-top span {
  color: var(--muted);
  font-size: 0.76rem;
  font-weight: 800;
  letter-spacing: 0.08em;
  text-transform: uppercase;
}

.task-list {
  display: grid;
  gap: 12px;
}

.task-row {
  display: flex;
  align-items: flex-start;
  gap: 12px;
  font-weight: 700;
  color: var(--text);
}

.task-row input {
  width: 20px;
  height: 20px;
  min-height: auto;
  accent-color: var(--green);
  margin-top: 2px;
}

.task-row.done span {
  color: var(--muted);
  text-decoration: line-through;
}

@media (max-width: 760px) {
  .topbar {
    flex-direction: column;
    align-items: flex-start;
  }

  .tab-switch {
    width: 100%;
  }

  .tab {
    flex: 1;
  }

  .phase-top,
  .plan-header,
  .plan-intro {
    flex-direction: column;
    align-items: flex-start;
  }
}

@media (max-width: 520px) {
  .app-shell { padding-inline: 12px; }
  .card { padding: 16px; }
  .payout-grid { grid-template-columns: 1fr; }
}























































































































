@@ -1,0 +1,703 @@
+import './styles.css';
+
+const NICHES = [
+  ['General entertainment', 1, 4],
+  ['Gaming', 1, 3.5],
+  ['Facts and history', 1.5, 5],
+  ['Education and how-to', 2, 6],
+  ['Health and lifestyle', 2, 6],
+  ['Tech and software', 4, 12],
+  ['Finance and business', 6, 18],
+];
+
+const SHORTS = [0.01, 0.07];
+
+const PLAN = [
+  {
+    name: 'Setup',
+    start: 1,
+    end: 5,
+    tasks: [
+      'Pick a niche and list 30 video ideas',
+      'Create the channel and turn on 2-step verification',
+      'Make a logo and banner in Canva',
+      'Write a keyword-rich channel description',
+      'Research keywords with autocomplete and Google Trends',
+    ],
+  },
+  {
+    name: 'Build your pipeline',
+    start: 6,
+    end: 10,
+    tasks: [
+      'Choose how you\'ll write scripts and rewrite them in your voice',
+      'Choose your voice method: record yourself or text-to-speech',
+      'Set up a free editor (CapCut or DaVinci Resolve)',
+      'Bookmark free footage and music sources',
+      'Make a reusable thumbnail template',
+    ],
+  },
+  {
+    name: 'Publish and learn',
+    start: 11,
+    end: 30,
+    tasks: [
+      'Publish your first Short',
+      'Publish your first long video (6-10 minutes)',
+      'Reach 10 Shorts published',
+      'Reach 4 long videos published',
+      'Add a custom thumbnail and chapters to every long video',
+      'Check retention drop-offs in Studio each week',
+    ],
+  },
+  {
+    name: 'Double down',
+    start: 31,
+    end: 45,
+    tasks: [
+      'Find your 2-3 best performing videos',
+      'Make 3 more videos in that format',
+      'Reply to every comment',
+      'Cross-post Shorts to TikTok and Reels',
+      'Post 4-5 Shorts in a week',
+    ],
+  },
+  {
+    name: 'Optimize and apply',
+    start: 46,
+    end: 60,
+    tasks: [
+      'Redo your weakest titles and thumbnails',
+      'Add playlists and end screens',
+      'Set up AdSense',
+      'Check the Monetization tab in Studio',
+      'Apply if you meet a tier, or keep posting',
+    ],
+  },
+];
+
+const $ = (id) => document.getElementById(id);
+
+const state = {
+  type: 'long',
+  planKey: 'yt-plan-v1',
+  plan: {
+    start: null,
+    done: {},
+  },
+};
+
+const formatMoney = (value) => {
+  const n = Number.isFinite(value) ? value : 0;
+  if (n < 10) return `$${n.toFixed(2)}`;
+  return `$${Math.round(n).toLocaleString('en-US')}`;
+};
+
+const formatNumber = (value) => Math.round(value).toLocaleString('en-US');
+
+const populateNicheOptions = () => {
+  const nicheSelect = $('niche');
+  NICHES.forEach(([label], index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = label;
+    nicheSelect.appendChild(option);
+  });
+};
+
+const setType = (type) => {
+  state.type = type;
+  const buttons = document.querySelectorAll('.type-btn');
+  buttons.forEach((button) => {
+    const active = button.dataset.type === type;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+
+  const longOptions = $('long-options');
+  longOptions.style.display = type === 'long' ? 'block' : 'none';
+  calculateEarnings();
+};
+
+function calculateEarnings() {
+  const views = Math.max(0, Number.parseFloat($('views').value) || 0);
+  let low = 0;
+  let high = 0;
+
+  if (state.type === 'short') {
+    low = SHORTS[0];
+    high = SHORTS[1];
+  } else {
+    const niche = NICHES[Number($('niche').value)] || NICHES[0];
+    const geo = Number.parseFloat($('geo').value) || 1;
+    const multiplier = $('mid').checked ? 1.2 : 1;
+    low = niche[1] * geo * multiplier;
+    high = niche[2] * geo * multiplier;
+  }
+
+  const lowTotal = (views / 1000) * low;
+  const highTotal = (views / 1000) * high;
+  const avg = (lowTotal + highTotal) / 2;
+
+  $('mid-out').textContent = formatMoney(avg);
+  $('range-out').textContent = `Likely range: ${formatMoney(lowTotal)} to ${formatMoney(highTotal)}`;
+  $('rpm-out').textContent = `${formatMoney(low)} - ${formatMoney(high)}`;
+}
+
+function renderProgressBar(label, value, goal, unit = '') {
+  const ratio = goal <= 0 ? 0 : Math.min(100, (value / goal) * 100);
+  const done = value >= goal;
+
+  return `
+    <div class="progress-row">
+      <div class="progress-meta">
+        <span>${label}</span>
+        <strong>${formatNumber(value)} / ${formatNumber(goal)}${unit}</strong>
+      </div>
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(ratio)}" aria-label="${label}">
+        <span class="${done ? 'done' : ''}" style="width: ${ratio}%"></span>
+      </div>
+    </div>
+  `;
+}
+
+function calculateEligibility() {
+  const currentRules = $('rules').value === 'new';
+  const watchGoal = currentRules ? 8000 : 4000;
+  const shortsGoal = currentRules ? 20_000_000 : 10_000_000;
+
+  const subs = Math.max(0, Number($('subs').value) || 0);
+  const hours = Math.max(0, Number($('hrs').value) || 0);
+  const shorts = Math.max(0, Number($('sv').value) || 0);
+
+  $('bars').innerHTML = [
+    renderProgressBar('Subscribers', subs, 1000, ''),
+    renderProgressBar('Watch hours', hours, watchGoal, ' hrs'),
+    renderProgressBar('Shorts views', shorts, shortsGoal, ''),
+  ].join('');
+
+  const meetsAdRevenue = subs >= 1000 && (hours >= watchGoal || shorts >= shortsGoal);
+  const meetsFanFunding = subs >= 500 && (hours >= 3000 || shorts >= 3_000_000);
+  const status = $('status');
+
+  if (meetsAdRevenue) {
+    status.textContent = 'You meet the ad revenue requirements. Apply from the Earn tab in YouTube Studio.';
+    status.className = 'status-pill success';
+    return;
+  }
+
+  if (meetsFanFunding) {
+    status.textContent = 'You meet the fan funding tier. Keep going to reach 1,000 subscribers and the ad revenue goal.';
+    status.className = 'status-pill success';
+    return;
+  }
+
+  const needs = [];
+  if (subs < 1000) needs.push(`${formatNumber(1000 - subs)} more subscribers`);
+
+  if (hours < watchGoal && shorts < shortsGoal) {
+    const watchGap = watchGoal - hours;
+    const shortsGap = shortsGoal - shorts;
+    if (watchGap <= shortsGap) {
+      needs.push(`${formatNumber(watchGap)} more watch hours`);
+    } else {
+      needs.push(`${formatNumber(shortsGap)} more Shorts views`);
+    }
+  }
+
+  status.textContent = needs.length
+    ? `Not yet. For ad revenue you need ${needs.join(' and ')}.`
+    : 'Not yet. Keep posting and improving retention.';
+  status.className = 'status-pill neutral';
+}
+
+function ensurePlanState() {
+  try {
+    const raw = localStorage.getItem(state.planKey);
+    if (raw) state.plan = JSON.parse(raw);
+  } catch (error) {
+    console.warn('Could not load plan state', error);
+  }
+}
+
+function savePlanState() {
+  try {
+    localStorage.setItem(state.planKey, JSON.stringify(state.plan));
+  } catch (error) {
+    console.warn('Could not save plan state', error);
+  }
+}
+
+function ymd(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getDayNumber() {
+  if (!state.plan.start) return 0;
+  const start = new Date(`${state.plan.start}T00:00:00`);
+  const today = new Date(`${ymd(new Date())}T00:00:00`);
+  return Math.max(1, Math.round((today - start) / 86400000) + 1);
+}
+
+function renderPlan() {
+  const day = getDayNumber();
+  let totalTasks = 0;
+  let completedTasks = 0;
+
+  PLAN.forEach((phase, phaseIndex) => {
+    phase.tasks.forEach((_, taskIndex) => {
+      totalTasks += 1;
+      const key = `${phaseIndex}-${taskIndex}`;
+      if (state.plan.done[key]) completedTasks += 1;
+    });
+  });
+
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  let markup = `
+    <div class="plan-wrap">
+      <div class="card plan-summary">
+        <div class="plan-header">
+          <div>
+            <p class="eyebrow">Creator roadmap</p>
+            <h2>60-day growth plan</h2>
+          </div>
+          <div class="day-pill">${state.plan.start ? (day > 60 ? 'Plan complete' : `Day ${day} of 60`) : 'Ready'}</div>
+        </div>
+        <div class="plan-intro">
+          <span>${completedTasks} / ${totalTasks} tasks complete</span>
+          <span>${progress}%</span>
+        </div>
+        <div class="mini-progress">
+          <span class="${progress === 100 ? 'done' : ''}" style="width: ${progress}%"></span>
+        </div>
+        <div class="cta-row">
+          ${state.plan.start ? '<button type="button" class="secondary-btn" data-action="reset">Reset plan</button>' : '<button type="button" class="primary-btn" data-action="start">Start day 1 today</button>'}
+        </div>
+      </div>
+  `;
+
+  PLAN.forEach((phase, phaseIndex) => {
+    const current = day >= phase.start && day <= phase.end;
+    markup += `
+      <section class="card plan-phase ${current ? 'current' : ''}">
+        <div class="phase-top">
+          <h3>${phase.name}</h3>
+          <span>Days ${phase.start}-${phase.end}${current ? ' • current' : ''}</span>
+        </div>
+        <div class="task-list">
+          ${phase.tasks
+            .map((task, taskIndex) => {
+              const key = `${phaseIndex}-${taskIndex}`;
+              const checked = Boolean(state.plan.done[key]);
+              return `
+                <label class="task-row ${checked ? 'done' : ''}">
+                  <input type="checkbox" data-key="${key}" ${checked ? 'checked' : ''} />
+                  <span>${task}</span>
+                </label>
+              `;
+            })
+            .join('')}
+        </div>
+      </section>
+    `;
+  });
+
+  markup += '</div>';
+  $('plan-body').innerHTML = markup;
+}
+
+function bindEvents() {
+  document.querySelectorAll('.type-btn').forEach((button) => button.addEventListener('click', () => setType(button.dataset.type)));
+
+  $('views').addEventListener('input', calculateEarnings);
+  $('niche').addEventListener('change', calculateEarnings);
+  $('geo').addEventListener('change', calculateEarnings);
+  $('mid').addEventListener('change', calculateEarnings);
+
+  ['rules', 'subs', 'hrs', 'sv'].forEach((id) => {
+    $(id).addEventListener('input', calculateEligibility);
+    $(id).addEventListener('change', calculateEligibility);
+  });
+
+  document.querySelectorAll('.quick-picks button').forEach((button) => {
+    button.addEventListener('click', () => {
+      $('views').value = button.dataset.views;
+      calculateEarnings();
+    });
+  });
+
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const selected = tab.dataset.tab;
+      const isCalc = selected === 'calc';
+
+      document.querySelectorAll('.tab').forEach((item) => {
+        const active = item === tab;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-selected', String(active));
+      });
+
+      $('panel-calc').hidden = !isCalc;
+      $('panel-plan').hidden = isCalc;
+      $('panel-calc').classList.toggle('active', isCalc);
+      $('panel-plan').classList.toggle('active', !isCalc);
+    });
+  });
+
+  $('plan-body').addEventListener('change', (event) => {
+    const key = event.target.dataset.key;
+    if (!key) return;
+    if (event.target.checked) {
+      state.plan.done[key] = true;
+    } else {
+      delete state.plan.done[key];
+    }
+    savePlanState();
+    renderPlan();
+  });
+
+  $('plan-body').addEventListener('click', (event) => {
+    const action = event.target.dataset.action;
+    if (!action) return;
+
+    if (action === 'start') {
+      state.plan.start = ymd(new Date());
+      savePlanState();
+      renderPlan();
+    }
+
+    if (action === 'reset') {
+      const shouldReset = window.confirm('Clear all progress and restart the plan?');
+      if (!shouldReset) return;
+      state.plan = { start: null, done: {} };
+      savePlanState();
+      renderPlan();
+    }
+  });
+}
+
+function init() {
+  populateNicheOptions();
+  bindEvents();
+  ensurePlanState();
+  calculateEarnings();
+  calculateEligibility();
+  renderPlan();
+}
+
+init();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Channel Payout Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark">YT</div>
+          <div>
+            <p class="eyebrow">Creator toolkit</p>
+            <h1>Channel Payout Calculator</h1>
+          </div>
+        </div>
+
+        <div class="tab-switch" role="tablist" aria-label="Main sections">
+          <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="calc">Calculator</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="plan">60-day plan</button>
+        </div>
+      </header>
+
+      <main class="page">
+        <section id="panel-calc" class="panel active" aria-label="Calculator panel">
+          <div class="card hero-card">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Earnings estimate</p>
+                <h2>How much could your channel earn?</h2>
+              </div>
+            </div>
+
+            <div class="type-toggle" role="group" aria-label="Video type selector">
+              <button type="button" class="type-btn active" data-type="long" aria-pressed="true">Long-form</button>
+              <button type="button" class="type-btn" data-type="short" aria-pressed="false">Shorts</button>
+            </div>
+
+            <div class="field-group">
+              <label for="views">Total views</label>
+              <input id="views" type="number" min="0" value="100000" inputmode="numeric" />
+            </div>
+
+            <div class="quick-picks" aria-label="Quick view presets">
+              <button type="button" data-views="10000">10K</button>
+              <button type="button" data-views="100000">100K</button>
+              <button type="button" data-views="1000000">1M</button>
+              <button type="button" data-views="10000000">10M</button>
+            </div>
+
+            <div id="long-options" class="stacked-fields">
+              <div class="field-group">
+                <label for="niche">Niche</label>
+                <select id="niche"></select>
+              </div>
+
+              <div class="field-group">
+                <label for="geo">Audience location</label>
+                <select id="geo">
+                  <option value="1">US, UK, Canada, Australia</option>
+                  <option value="0.7">Western Europe</option>
+                  <option value="0.45">Mixed worldwide</option>
+                  <option value="0.2">Mostly Asia, Africa or Latin America</option>
+                </select>
+              </div>
+
+              <label class="check-row">
+                <input type="checkbox" id="mid" checked />
+                <span>Videos are 8+ minutes (mid-roll ads)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card payout-card" aria-live="polite">
+            <div class="payout-header">
+              <span>Estimated payout</span>
+              <span class="badge">After YouTube cut</span>
+            </div>
+            <div id="mid-out" class="money-output">$0</div>
+            <div id="range-out" class="range-line">Likely range: $0 to $0</div>
+            <div class="payout-grid">
+              <div>
+                <span>RPM</span>
+                <strong id="rpm-out">$0 - $0</strong>
+              </div>
+              <div>
+                <span>Program status</span>
+                <strong>Needs approval</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Eligibility check</p>
+                <h2>Can you join the Partner Program?</h2>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="rules">Rules to check against</label>
+              <select id="rules">
+                <option value="now">Current rules</option>
+                <option value="new">New rules from Feb 1, 2027</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="subs">Subscribers</label>
+              <input id="subs" type="number" min="0" value="0" inputmode="numeric" />
+            </div>
+
+            <div class="field-group">
+              <label for="hrs">Public watch hours (last 12 months)</label>
+              <input id="hrs" type="number" min="0" value="0" inputmode="numeric" />
+            </div>
+
+            <div class="field-group">
+              <label for="sv">Shorts views (last 90 days)</label>
+              <input id="sv" type="number" min="0" value="0" inputmode="numeric" />
+            </div>
+
+            <div id="bars" class="progress-stack" aria-live="polite"></div>
+            <div id="status" class="status-pill neutral">Not yet eligible.</div>
+            <p class="helper-text">
+              Lower tier unlocks fan funding and Shopping; higher tier unlocks ad revenue. You only need to hit the watch-hours path or the Shorts path, not both.
+            </p>
+          </div>
+        </section>
+
+        <section id="panel-plan" class="panel" aria-label="Plan panel" hidden>
+          <div id="plan-body"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
